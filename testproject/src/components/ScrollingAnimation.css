@@ -1,0 +1,27 @@
+.scrolling-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.animation-item {
+  margin: 20px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .animation-item {
+    margin: 10px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .animation-item {
+    margin: 5px;
+    padding: 10px;
+  }
+}

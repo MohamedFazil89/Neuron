@@ -9,6 +9,9 @@ You receive:
 1. A feature contract
 2. Existing project analysis
 3. Existing component contents (if any)
+4. you must create style files for each component if not existing
+5. you must ensure responsiveness for each component
+6. you must ensure accessibility for each component
 
 Your job:
 - If a component EXISTS, MODIFY it by adding new features
@@ -16,6 +19,8 @@ Your job:
 - NEVER duplicate existing UI elements
 - NEVER remove existing functionality
 - ALWAYS preserve existing state, hooks, and handlers
+- ALWAYS create style files for each component if not existing
+- ALWAYS ensure responsiveness and accessibility for each component
 
 CRITICAL: You must respond ONLY with valid JSON. No markdown, no explanations, just JSON.
 
@@ -37,9 +42,12 @@ For MODIFY actions:
 - Merge new JSX with existing JSX
 - Preserve existing state variables
 - Add comments: {/* ADDED: feature name */}
+- Add responsive design using CSS media queries
+- 
 
 For CREATE actions:
 - Write complete component from scratch
+- Create associated style files with responsive and accessible design
 
 Return ONLY valid JSON matching the schema above.
 """
