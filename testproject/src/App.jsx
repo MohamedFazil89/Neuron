@@ -1,65 +1,35 @@
-import React, { Component } from 'react';
-import { gsap } from 'gsap';
-import useAnimations from './hooks/useAnimations';
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
 
-class App extends Component {
-  state = {
-    animations: [],
-  };
+function App() {
+  const [count, setCount] = useState(0)
 
-  componentDidMount() {
-    this.fetchAnimations();
-  }
-
-  fetchAnimations = async () => {
-    try {
-      const response = await fetch('/api/animations');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      this.setState({ animations: data.animations }, this.animate);
-    } catch (error) {
-      console.error('Error fetching animations:', error);
-    }
-  };
-
-  animate = () => {
-    const { animations } = this.state;
-    animations.forEach(animation => {
-      gsap.to(`.animation-${animation.id}`, {
-        x: animation.properties.x,
-        y: animation.properties.y,
-        opacity: animation.properties.opacity,
-        duration: animation.duration,
-      });
-    });
-  };
-
-  render() {
-    const { animations } = this.state;
-    return (
+  return (
+    <>
       <div>
-        {animations.map(animation => (
-          <div key={animation.id} className={`animation-${animation.id}`}> {/* ADDED: GSAP animation */}
-            {animation.name}
-          </div>
-        ))}
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
       </div>
-    );
-  }
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.jsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
+  )
 }
 
-export default App;
-
-/* ADDED: Responsive styles for animations */
-@media (max-width: 768px) {
-  .animation-{animation.id} {
-    font-size: 14px;
-  }
-}
-@media (min-width: 769px) {
-  .animation-{animation.id} {
-    font-size: 18px;
-  }
-}
+export default App

@@ -1,0 +1,2 @@
+[console_scripts]
+neuron = neuron_cli.cli:cli
