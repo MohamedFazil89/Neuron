@@ -1,6 +1,7 @@
 # agents/backend_contextual.py
 from core.openai_client import call_openai_json
 from agents.analyzer import should_modify_file
+import json
 
 BACKEND_CONTEXTUAL_PROMPT = """You are the Backend Agent with project context awareness.
 
@@ -16,7 +17,9 @@ Your job:
 - NEVER remove existing functionality
 - ALWAYS preserve existing imports, routes, and logic
 
-Output Rules:
+CRITICAL: You must respond ONLY with valid JSON. No markdown, no explanations, just JSON.
+
+Output JSON Schema:
 {
   "status": "success | blocked | error",
   "files": [
@@ -30,21 +33,21 @@ Output Rules:
 }
 
 For MODIFY actions:
-- Include the COMPLETE updated file content
+- Include the COMPLETE updated file content in JSON
 - Merge new code with existing code
 - Preserve all existing functionality
 - Add comments showing what was added: // ADDED: feature name
 
 For CREATE actions:
 - Write complete file from scratch
+
+Return ONLY valid JSON matching the schema above.
 """
 
 def backend_agent_contextual(feature, contract, project_analysis):
     """
     Context-aware backend agent that respects existing files.
     """
-    
-    from core.openai_client import call_openai_json
     
     # Prepare context for each file
     file_contexts = []
@@ -78,7 +81,7 @@ Instructions:
 3. When modifying, preserve ALL existing code and add new code appropriately
 4. Add clear comments showing what was added for this feature
 
-Generate the complete implementation.
+Generate the complete implementation as a JSON response matching the schema in the system prompt.
 """
     
     print(f"[BACKEND-CONTEXT] Processing with {len(file_contexts)} files")

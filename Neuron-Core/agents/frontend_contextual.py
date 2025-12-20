@@ -17,7 +17,9 @@ Your job:
 - NEVER remove existing functionality
 - ALWAYS preserve existing state, hooks, and handlers
 
-Output Rules:
+CRITICAL: You must respond ONLY with valid JSON. No markdown, no explanations, just JSON.
+
+Output JSON Schema:
 {
   "status": "success | blocked | error",
   "files": [
@@ -31,13 +33,15 @@ Output Rules:
 }
 
 For MODIFY actions:
-- Include COMPLETE updated component
+- Include COMPLETE updated component in JSON
 - Merge new JSX with existing JSX
 - Preserve existing state variables
 - Add comments: {/* ADDED: feature name */}
 
 For CREATE actions:
 - Write complete component from scratch
+
+Return ONLY valid JSON matching the schema above.
 """
 
 def frontend_agent_contextual(feature, contract, project_analysis):
@@ -76,7 +80,7 @@ Instructions:
 3. When modifying, preserve ALL existing JSX, state, and handlers
 4. Add clear comments showing what was added
 
-Generate the complete implementation.
+Generate the complete implementation as a JSON response matching the schema in the system prompt.
 """
     
     print(f"[FRONTEND-CONTEXT] Processing with {len(file_contexts)} files")
