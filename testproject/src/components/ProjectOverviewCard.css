@@ -1,0 +1,12 @@
+.project-overview-card {
+  border: 1px solid #dee2e6;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .project-overview-card {
+    padding: 10px;
+  }
+}

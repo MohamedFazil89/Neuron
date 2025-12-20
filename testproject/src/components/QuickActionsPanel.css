@@ -1,0 +1,24 @@
+.quick-actions-panel {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.quick-actions-panel button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.quick-actions-panel button:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .quick-actions-panel {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,24 @@
+.project-health-summary {
+  border: 1px solid #dee2e6;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.project-health-summary .healthy {
+  color: green;
+}
+
+.project-health-summary .warning {
+  color: yellow;
+}
+
+.project-health-summary .critical {
+  color: red;
+}
+
+@media (max-width: 768px) {
+  .project-health-summary {
+    padding: 10px;
+  }
+}
