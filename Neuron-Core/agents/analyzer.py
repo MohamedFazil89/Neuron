@@ -272,7 +272,7 @@ def categorize_file(file_path, content_sample=None):
     return 'other'
 
 def analyze_project_structure(project_root):
-    """Dynamically analyze project structure"""
+    """Dynamically analyze project structure - FIXED VERSION"""
     structure = defaultdict(lambda: defaultdict(list))
     
     for file_path in project_root.rglob('*'):
@@ -298,9 +298,8 @@ def analyze_project_structure(project_root):
                 else:
                     domain = 'shared'
             
-            if category not in structure[domain]:
-              structure[domain][category] = []
-              structure[domain][category].append(relative_path)
+            # FIXED: This was the bug - incorrect indentation
+            structure[domain][category].append(relative_path)
     
     return structure
 

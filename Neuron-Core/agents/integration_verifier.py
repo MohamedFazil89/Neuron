@@ -341,56 +341,84 @@ class IntegrationVerifier:
         - Resolve naming conflicts
         """
         
+        print(f"\n[INTEGRATION-FIX] === STARTING AUTO-FIX ===")
+        print(f"[INTEGRATION-FIX] Project: {project_path}")
+        print(f"[INTEGRATION-FIX] Fix plan items: {len(fix_plan)}")
+        
         project_root = Path(project_path)
         fixed = []
         failed = []
         
-        for fix in fix_plan:
+        for i, fix in enumerate(fix_plan, 1):
+            print(f"\n[INTEGRATION-FIX] --- Fix {i}/{len(fix_plan)} ---")
+            print(f"[INTEGRATION-FIX] Action: {fix.get('action')}")
+            print(f"[INTEGRATION-FIX] Target: {fix.get('target_file')}")
+            
             try:
                 if fix["action"] == "remove_invalid_import":
+                    target_path = Path(fix["target_file"])
+                    print(f"[INTEGRATION-FIX] Removing invalid import from: {target_path}")
                     IntegrationVerifier._remove_invalid_import(
-                        Path(fix["target_file"]),
-                        fix["import_line"]
+                        target_path,
+                        fix.get("import_line", "")
                     )
                     fixed.append(fix)
                 
                 elif fix["action"] == "resolve_naming_conflict":
+                    target_path = Path(fix["target_file"])
+                    print(f"[INTEGRATION-FIX] Resolving naming conflict in: {target_path}")
                     IntegrationVerifier._remove_invalid_import(
-                        Path(fix["target_file"]),
+                        target_path,
                         fix.get("import_line", "")
                     )
                     fixed.append(fix)
                 
                 elif fix["action"] == "add_import":
+                    target_path = project_root / fix["target_file"] if not Path(fix["target_file"]).is_absolute() else Path(fix["target_file"])
+                    print(f"[INTEGRATION-FIX] Adding import to: {target_path}")
+                    print(f"[INTEGRATION-FIX]   Component: {fix['component']}")
+                    print(f"[INTEGRATION-FIX]   Source: {fix['source']}")
                     IntegrationVerifier._add_import(
-                        project_root / fix["target_file"],
+                        target_path,
                         fix["component"],
                         fix["source"]
                     )
                     fixed.append(fix)
                 
                 elif fix["action"] == "add_usage":
+                    target_path = project_root / fix["target_file"] if not Path(fix["target_file"]).is_absolute() else Path(fix["target_file"])
+                    print(f"[INTEGRATION-FIX] Adding component usage to: {target_path}")
                     IntegrationVerifier._add_component_usage(
-                        project_root / fix["target_file"],
+                        target_path,
                         fix["component"]
                     )
                     fixed.append(fix)
                 
                 elif fix["action"] == "register_route":
+                    target_path = project_root / fix["target_file"] if not Path(fix["target_file"]).is_absolute() else Path(fix["target_file"])
                     IntegrationVerifier._register_route(
-                        project_root / fix["target_file"],
+                        target_path,
                         fix["route_file"],
                         fix["route_name"]
                     )
                     fixed.append(fix)
                 
+                print(f"[INTEGRATION-FIX] ✓ Fix {i} completed")
+                
             except Exception as e:
+                print(f"[INTEGRATION-FIX] ✗ Fix {i} FAILED: {e}")
+                import traceback
+                traceback.print_exc()
                 failed.append({
                     "fix": fix,
                     "error": str(e)
                 })
         
         status = "success" if not failed else "partial"
+        
+        print(f"\n[INTEGRATION-FIX] === AUTO-FIX COMPLETE ===")
+        print(f"[INTEGRATION-FIX] Fixed: {len(fixed)}")
+        print(f"[INTEGRATION-FIX] Failed: {len(failed)}")
         
         return {
             "status": status,
@@ -413,6 +441,7 @@ class IntegrationVerifier:
     def _remove_invalid_import(target_file: Path, import_line: str):
         """
         NEW METHOD: Remove an invalid import line
+        Uses flexible matching to handle whitespace differences
         """
         if not target_file.exists():
             print(f"[INTEGRATION-FIX] ⚠ File not found: {target_file}")
@@ -427,64 +456,125 @@ class IntegrationVerifier:
             removed = False
             
             for line in lines:
-                # Check if this line matches the import to remove
-                if import_line in line or line.strip() == import_line:
+                # Check multiple ways to match the import line
+                should_remove = False
+                
+                # Exact match (with or without leading/trailing whitespace)
+                if line.strip() == import_line.strip():
+                    should_remove = True
+                # Partial match (if the import_line is contained in the line)
+                elif import_line.strip() in line:
+                    should_remove = True
+                # Match by checking if this line imports from the same problematic path
+                elif line.strip().startswith('import') and 'from' in line:
+                    # Extract the path from both lines
+                    if 'from' in import_line:
+                        problem_path = import_line.split('from')[1].strip().strip("'\"")
+                        line_path_match = re.search(r'from\s+[\'"](.+?)[\'"]', line)
+                        if line_path_match:
+                            line_path = line_path_match.group(1)
+                            if line_path == problem_path or problem_path in line_path:
+                                should_remove = True
+                
+                if should_remove:
                     removed = True
-                    continue
-                filtered_lines.append(line)
+                    print(f"[INTEGRATION-FIX] 🗑 Removing: {line.strip()}")
+                else:
+                    filtered_lines.append(line)
             
             if removed:
                 target_file.write_text('\n'.join(filtered_lines), encoding='utf-8')
-                print(f"[INTEGRATION-FIX] ✓ Removed invalid import from {target_file.name}")
+                print(f"[INTEGRATION-FIX] ✓ Fixed {target_file.name}")
             else:
                 print(f"[INTEGRATION-FIX] ⚠ Import line not found in {target_file.name}")
+                print(f"[INTEGRATION-FIX]   Looking for: {import_line.strip()}")
         except Exception as e:
             print(f"[INTEGRATION-FIX] ✗ Error removing import: {e}")
+            import traceback
+            traceback.print_exc()
     
     @staticmethod
     def _add_import(target_file: Path, component: str, source: str):
-        """Add import statement to file"""
+        """
+        Add import statement to file
+        FIXED: Better path calculation and duplicate detection
+        """
         if not target_file.exists():
+            print(f"[INTEGRATION-FIX] ⚠ File not found: {target_file}")
             return
         
-        content = target_file.read_text(encoding='utf-8')
-        
-        # Check if import already exists
-        if f"import {component}" in content or f"import.*{component}" in content:
-            print(f"[INTEGRATION-FIX] Import for {component} already exists")
-            return
-        
-        # Calculate relative import path
         try:
-            source_path = Path(source)
-            if not source_path.is_absolute():
-                # Source is relative to project root
-                source_path = target_file.parent.parent / source
+            content = target_file.read_text(encoding='utf-8')
             
-            relative_path = os.path.relpath(source_path, target_file.parent).replace("\\", "/")
-        except:
-            # Fallback: use source as-is
-            relative_path = source.replace("\\", "/")
-        
-        if not relative_path.startswith('.'):
-            relative_path = './' + relative_path
-        relative_path = relative_path.replace('.jsx', '').replace('.tsx', '').replace('.js', '')
-        
-        # Add import at top of file (after existing imports)
-        import_line = f"import {component} from '{relative_path}';"
-        
-        # Find where to insert (after last import)
-        lines = content.split('\n')
-        insert_index = 0
-        
-        for i, line in enumerate(lines):
-            if line.strip().startswith('import '):
-                insert_index = i + 1
-        
-        lines.insert(insert_index, import_line)
-        
-        target_file.write_text('\n'.join(lines), encoding='utf-8')
-        print(f"[INTEGRATION-FIX] Added import for {component} in {target_file.name}")
+            # Check if import already exists (more thorough check)
+            if f"import {component}" in content:
+                print(f"[INTEGRATION-FIX] ℹ Import for {component} already exists")
+                return
+            
+            # Calculate correct relative path
+            source_path = Path(source)
+            
+            # If source is relative (like "src/components/HeroSection.jsx")
+            # we need to calculate from target_file's location
+            if not source_path.is_absolute():
+                # Assume source is relative to project root
+                # target_file is something like: /project/src/App.jsx
+                # source is something like: src/components/HeroSection.jsx
+                
+                # Get the directory containing target_file
+                target_dir = target_file.parent
+                
+                # Build absolute path to source
+                project_root = target_file.parent  # Assuming target is in src/
+                while project_root.name != 'src' and project_root.parent != project_root:
+                    project_root = project_root.parent
+                project_root = project_root.parent  # Go up from src/ to project root
+                
+                source_abs = project_root / source
+                
+                if not source_abs.exists():
+                    # Try simpler approach: source is already in correct form
+                    relative_path = source.replace('\\', '/')
+                else:
+                    # Calculate relative path from target to source
+                    try:
+                        relative_path = os.path.relpath(source_abs, target_dir).replace("\\", "/")
+                    except:
+                        relative_path = source.replace('\\', '/')
+            else:
+                # Source is absolute
+                relative_path = os.path.relpath(source_path, target_file.parent).replace("\\", "/")
+            
+            # Ensure path starts with ./
+            if not relative_path.startswith('.'):
+                relative_path = './' + relative_path
+            
+            # Remove extension
+            relative_path = relative_path.replace('.jsx', '').replace('.tsx', '').replace('.js', '')
+            
+            # Create import line
+            import_line = f"import {component} from '{relative_path}';"
+            
+            # Find where to insert (after last import)
+            lines = content.split('\n')
+            insert_index = 0
+            
+            for i, line in enumerate(lines):
+                if line.strip().startswith('import '):
+                    insert_index = i + 1
+            
+            # Insert the import
+            lines.insert(insert_index, import_line)
+            
+            # Write back
+            new_content = '\n'.join(lines)
+            target_file.write_text(new_content, encoding='utf-8')
+            print(f"[INTEGRATION-FIX] ✓ Added import for {component} in {target_file.name}")
+            
+        except Exception as e:
+            print(f"[INTEGRATION-FIX] ✗ Error adding import: {e}")
+            import traceback
+            traceback.print_exc()
     
     @staticmethod
     def _add_component_usage(target_file: Path, component: str):
