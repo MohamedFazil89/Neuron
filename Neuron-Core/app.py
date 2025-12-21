@@ -24,6 +24,8 @@ PROJECT_PATH = None
 def health():
     return jsonify({"status": "ok"}), 200
 
+
+
 @app.route("/set-project", methods=["POST"])
 def set_project():
     """
@@ -68,6 +70,8 @@ def set_project():
             "status": "error",
             "message": str(e)
         }), 500
+    
+
 @app.route("/analyze", methods=["GET"])
 def analyze():
     """
