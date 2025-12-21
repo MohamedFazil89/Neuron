@@ -298,7 +298,9 @@ def analyze_project_structure(project_root):
                 else:
                     domain = 'shared'
             
-            structure[domain][category].append(relative_path)
+            if category not in structure[domain]:
+              structure[domain][category] = []
+              structure[domain][category].append(relative_path)
     
     return structure
 
@@ -425,7 +427,9 @@ def analyze_project(project_path):
             if full_path.exists() and full_path.stat().st_size < 100000:
                 try:
                     with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        analysis["file_contents"][file_path] = f.read()
+                        if "file_contents" not in analysis:
+                           analysis["file_contents"] = {}
+                           analysis["file_contents"][file_path] = f.read()
                 except:
                     pass
     

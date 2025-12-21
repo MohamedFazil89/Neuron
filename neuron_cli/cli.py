@@ -1031,5 +1031,138 @@ def projects():
         console.print(f"[red]Error loading projects: {e}[/red]")
 
 
+
+# Add this command to neuron_cli/cli.py
+
+@cli.command()
+@click.option('--project', '-p', type=click.Path(exists=True), help='Project path (optional if initialized)')
+@click.option('--fix/--no-fix', default=False, help='Automatically fix detected issues')
+def audit_fix(project, fix):
+    """
+    Audit project for integration issues and optionally fix them
+    
+    This command works on ANY project (not just Neuron-generated ones).
+    
+    It checks for:
+    - Components not imported in main files
+    - Routes not registered in app
+    - Orphaned files
+    - Missing integrations
+    
+    Examples:
+        neuron audit-fix                    # Audit current project
+        neuron audit-fix --fix              # Audit and auto-fix issues
+        neuron audit-fix -p /path --fix     # Audit specific project and fix
+    """
+    
+    if project:
+        project_path = Path(project).resolve()
+        # Set as current project
+        make_api_request(
+            "/set-project",
+            method="POST",
+            data={"project_path": str(project_path)}
+        )
+    else:
+        project_path = NeuronConfig.get_current_project()
+        if not project_path:
+            console.print("[red]❌ No project specified and no current project set[/red]")
+            console.print("[yellow]Use 'neuron init <path>' first or use --project flag[/yellow]")
+            sys.exit(1)
+    
+    console.print(Panel.fit(
+        f"[cyan]Auditing project:[/cyan]\n[white]{project_path}[/white]\n\n"
+        f"[dim]Auto-fix: {'ENABLED' if fix else 'DISABLED'}[/dim]",
+        title="🔍 Project Audit"
+    ))
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("[cyan]Scanning for integration issues...", total=None)
+        
+        response = make_api_request(
+            "/audit-fix",
+            method="POST",
+            data={
+                "project_path": str(project_path),
+                "auto_fix": fix
+            }
+        )
+        
+        progress.update(task, completed=True)
+    
+    if response['status'] != 'success':
+        console.print(f"[red]❌ Audit failed: {response.get('message', 'Unknown error')}[/red]")
+        sys.exit(1)
+    
+    # Display results
+    issues_found = response['issues_found']
+    issues = response['issues']
+    fixes_applied = response.get('fixes_applied', 0)
+    
+    console.print(f"\n[bold cyan]Audit Results[/bold cyan]")
+    console.print("─" * 50)
+    
+    if issues_found == 0:
+        console.print("\n[green]✓ No integration issues found![/green]")
+        console.print("[dim]Your project is properly wired.[/dim]")
+        return
+    
+    console.print(f"\n[yellow]Found {issues_found} issue(s)[/yellow]\n")
+    
+    # Group issues by severity
+    critical_issues = [i for i in issues if i['severity'] == 'critical']
+    warning_issues = [i for i in issues if i['severity'] == 'warning']
+    info_issues = [i for i in issues if i['severity'] == 'info']
+    
+    if critical_issues:
+        console.print("[bold red]🔴 Critical Issues:[/bold red]")
+        for issue in critical_issues:
+            console.print(f"\n  Type: {issue['type']}")
+            console.print(f"  File: {issue.get('file', 'N/A')}")
+            console.print(f"  Description: {issue['description']}")
+            if issue.get('auto_fixable'):
+                console.print(f"  [green]✓ Auto-fixable[/green]")
+    
+    if warning_issues:
+        console.print("\n[bold yellow]🟡 Warnings:[/bold yellow]")
+        for issue in warning_issues:
+            console.print(f"\n  Type: {issue['type']}")
+            console.print(f"  File: {issue.get('file', 'N/A')}")
+            console.print(f"  Description: {issue['description']}")
+            if issue.get('auto_fixable'):
+                console.print(f"  [green]✓ Auto-fixable[/green]")
+    
+    if info_issues:
+        console.print("\n[bold blue]🔵 Info:[/bold blue]")
+        for issue in info_issues:
+            console.print(f"\n  Type: {issue['type']}")
+            console.print(f"  Description: {issue['description']}")
+    
+    # Show fixes if applied
+    if fix and fixes_applied > 0:
+        console.print(f"\n[bold green]✓ Applied {fixes_applied} automatic fix(es)[/bold green]")
+        
+        fixes = response.get('fixes', [])
+        if fixes:
+            console.print("\n[cyan]Fixes applied:[/cyan]")
+            for fix_info in fixes:
+                action = fix_info.get('action', 'unknown')
+                if action == 'add_import':
+                    console.print(f"  ✓ Added import for {fix_info['component']} in {fix_info['target_file']}")
+                elif action == 'add_usage':
+                    console.print(f"  ✓ Added usage of {fix_info['component']} in {fix_info['target_file']}")
+                elif action == 'register_route':
+                    console.print(f"  ✓ Registered route {fix_info['route_name']} in {fix_info['target_file']}")
+    
+    elif not fix and any(i.get('auto_fixable') for i in issues):
+        console.print("\n[yellow]💡 Tip: Run with --fix to automatically fix these issues[/yellow]")
+        console.print("   [dim]neuron audit-fix --fix[/dim]")
+    
+    console.print("\n[green]✓ Audit complete![/green]")
+
 if __name__ == "__main__":
     cli()
