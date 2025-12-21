@@ -458,19 +458,39 @@ def audit_fix():
         if auto_fix and all_issues:
             print(f"[AUDIT-FIX] → Applying auto-fixes...")
             
-            if frontend_verification.get("auto_fixable"):
-                fix_result = IntegrationVerifier.auto_fix_integration(
-                    project_path, frontend_verification["fix_plan"]
-                )
-                fixes_applied.extend(fix_result["fixed"])
+            # Check if there are any auto-fixable issues
+            auto_fixable_issues = [i for i in all_issues if i.get("auto_fixable", False)]
             
-            if backend_verification.get("auto_fixable"):
-                fix_result = IntegrationVerifier.auto_fix_integration(
-                    project_path, backend_verification["fix_plan"]
-                )
-                fixes_applied.extend(fix_result["fixed"])
-            
-            print(f"[AUDIT-FIX] ✓ Applied {len(fixes_applied)} fixes")
+            if auto_fixable_issues:
+                # Apply frontend fixes
+                if frontend_verification.get("fix_plan"):
+                    print(f"[AUDIT-FIX] → Fixing {len(frontend_verification['fix_plan'])} frontend issues...")
+                    fix_result = IntegrationVerifier.auto_fix_integration(
+                        project_path, frontend_verification["fix_plan"]
+                    )
+                    fixes_applied.extend(fix_result["fixed"])
+                    
+                    if fix_result.get("failed"):
+                        print(f"[AUDIT-FIX] ⚠ {len(fix_result['failed'])} fixes failed")
+                        for failed in fix_result["failed"]:
+                            print(f"  - {failed['fix']['action']}: {failed['error']}")
+                
+                # Apply backend fixes
+                if backend_verification.get("fix_plan"):
+                    print(f"[AUDIT-FIX] → Fixing {len(backend_verification['fix_plan'])} backend issues...")
+                    fix_result = IntegrationVerifier.auto_fix_integration(
+                        project_path, backend_verification["fix_plan"]
+                    )
+                    fixes_applied.extend(fix_result["fixed"])
+                    
+                    if fix_result.get("failed"):
+                        print(f"[AUDIT-FIX] ⚠ {len(fix_result['failed'])} fixes failed")
+                        for failed in fix_result["failed"]:
+                            print(f"  - {failed['fix']['action']}: {failed['error']}")
+                
+                print(f"[AUDIT-FIX] ✓ Applied {len(fixes_applied)} fixes")
+            else:
+                print(f"[AUDIT-FIX] ℹ No auto-fixable issues found")
         
         print("\n" + "=" * 60)
         print(f"[AUDIT-FIX] ✓ Audit complete")
