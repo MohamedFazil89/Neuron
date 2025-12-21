@@ -5,13 +5,13 @@ const FeatureTimeline = ({ features }) => {
   return (
     <div className="feature-timeline">
       <h2>Feature Timeline</h2>
-      <ul>
+      {/* <ul>
         {features.map((feature, index) => (
           <li key={index}>
             {feature.description} - {feature.filesChangedCount} files changed - {feature.timestamp}
           </li>
-        ))}
-      </ul>
+        ))} */}
+      {/* </ul> */}
     </div>
   );
 };

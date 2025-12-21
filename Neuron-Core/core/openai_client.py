@@ -23,7 +23,7 @@ def call_openai(prompt, max_tokens=1500, temperature=0.2, system_prompt=None):
     """
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # cheap + reliable for structured work
+            model="gpt-4o-mini",  # cheap + reliable for structured work or gpt-5.1-codex for coding
             messages=[
                 {
                     "role": "system",

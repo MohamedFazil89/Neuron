@@ -157,7 +157,6 @@ def init(project_path):
     console.print(f"  • Frontend files: {analysis.get('frontend_files', 0)}")
     console.print(f"  • Has package.json: {'✓' if analysis.get('has_package_json') else '✗'}")
 
-
 @cli.command()
 @click.argument('project_path', type=click.Path(exists=True), required=False)
 def analyze(project_path):
@@ -209,46 +208,169 @@ def analyze(project_path):
     console.print("\n[bold cyan]📊 Project Summary[/bold cyan]")
     console.print("─" * 50)
     
-    # Backend summary
-    console.print("\n[yellow]Backend (Express.js):[/yellow]")
-    console.print(f"  • Total files: [white]{len(analysis['backend']['files'])}[/white]")
-    console.print(f"  • Routes: [white]{len(analysis['backend']['routes'])}[/white]")
-    console.print(f"  • Controllers: [white]{len(analysis['backend']['controllers'])}[/white]")
-    console.print(f"  • Models: [white]{len(analysis['backend']['models'])}[/white]")
+    # Tech Stack
+    console.print("\n[bold yellow]🚀 Tech Stack Detected[/bold yellow]")
+    tech_stack = analysis.get('tech_stack', {})
     
-    if analysis['backend']['routes']:
-        console.print("\n  [dim]Routes found:[/dim]")
-        for route in analysis['backend']['routes'][:5]:
-            console.print(f"    • {route}")
-        if len(analysis['backend']['routes']) > 5:
-            console.print(f"    ... and {len(analysis['backend']['routes']) - 5} more")
+    # Frontend tech
+    if tech_stack.get('frontend'):
+        console.print("\n[cyan]Frontend:[/cyan]")
+        for tech, confidence in tech_stack['frontend'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {tech.capitalize()} ({confidence} confidence)")
+    
+    # Backend tech
+    if tech_stack.get('backend'):
+        console.print("\n[cyan]Backend:[/cyan]")
+        for tech, confidence in tech_stack['backend'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {tech.capitalize()} ({confidence} confidence)")
+    
+    # Language
+    if tech_stack.get('language'):
+        console.print("\n[cyan]Languages:[/cyan]")
+        for lang, confidence in tech_stack['language'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {lang.capitalize()} ({confidence} confidence)")
+    
+    # Database
+    if tech_stack.get('database'):
+        console.print("\n[cyan]Database:[/cyan]")
+        for db, confidence in tech_stack['database'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {db.capitalize()} ({confidence} confidence)")
+    
+    # ORM
+    if tech_stack.get('orm'):
+        console.print("\n[cyan]ORM/ODM:[/cyan]")
+        for orm, confidence in tech_stack['orm'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {orm.capitalize()} ({confidence} confidence)")
+    
+    # State Management
+    if tech_stack.get('state_management'):
+        console.print("\n[cyan]State Management:[/cyan]")
+        for state, confidence in tech_stack['state_management'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {state.capitalize()} ({confidence} confidence)")
+    
+    # Styling
+    if tech_stack.get('styling'):
+        console.print("\n[cyan]Styling:[/cyan]")
+        for style, confidence in tech_stack['styling'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {style.capitalize()} ({confidence} confidence)")
+    
+    # Testing
+    if tech_stack.get('testing'):
+        console.print("\n[cyan]Testing:[/cyan]")
+        for test, confidence in tech_stack['testing'].items():
+            icon = "🟢" if confidence == "high" else "🟡"
+            console.print(f"  {icon} {test.capitalize()} ({confidence} confidence)")
+    
+    # Backend summary
+    backend = analysis.get('backend', {})
+    if backend.get('exists'):
+        console.print("\n[bold yellow]📦 Backend Structure[/bold yellow]")
+        framework = backend.get('detected_framework', 'Unknown')
+        console.print(f"  Framework: [white]{framework.capitalize()}[/white]")
+        console.print(f"  Total files: [white]{backend.get('file_count', 0)}[/white]")
+        
+        structure = backend.get('structure', {})
+        if structure:
+            console.print("\n  [dim]File Organization:[/dim]")
+            for category, info in structure.items():
+                count = info.get('count', 0) if isinstance(info, dict) else len(info)
+                if count > 0:
+                    console.print(f"    • {category.capitalize()}: {count} files")
+                    
+                    # Show sample files
+                    files = info.get('files', []) if isinstance(info, dict) else info
+                    if files and len(files) <= 3:
+                        for f in files:
+                            console.print(f"      - {f}")
+                    elif files and len(files) > 3:
+                        for f in files[:2]:
+                            console.print(f"      - {f}")
+                        console.print(f"      ... and {len(files) - 2} more")
+    else:
+        console.print("\n[yellow]Backend: ✗ Not detected[/yellow]")
     
     # Frontend summary
-    console.print("\n[yellow]Frontend (React):[/yellow]")
-    console.print(f"  • Total files: [white]{len(analysis['frontend']['files'])}[/white]")
-    console.print(f"  • Components: [white]{len(analysis['frontend']['components'])}[/white]")
-    console.print(f"  • Pages: [white]{len(analysis['frontend']['pages'])}[/white]")
-    console.print(f"  • Hooks: [white]{len(analysis['frontend']['hooks'])}[/white]")
+    frontend = analysis.get('frontend', {})
+    if frontend.get('exists'):
+        console.print("\n[bold yellow]🎨 Frontend Structure[/bold yellow]")
+        framework = frontend.get('detected_framework', 'Unknown')
+        console.print(f"  Framework: [white]{framework.capitalize()}[/white]")
+        console.print(f"  Total files: [white]{frontend.get('file_count', 0)}[/white]")
+        
+        structure = frontend.get('structure', {})
+        if structure:
+            console.print("\n  [dim]File Organization:[/dim]")
+            for category, info in structure.items():
+                count = info.get('count', 0) if isinstance(info, dict) else len(info)
+                if count > 0:
+                    console.print(f"    • {category.capitalize()}: {count} files")
+                    
+                    # Show sample files
+                    files = info.get('files', []) if isinstance(info, dict) else info
+                    if files and len(files) <= 3:
+                        for f in files:
+                            console.print(f"      - {f}")
+                    elif files and len(files) > 3:
+                        for f in files[:2]:
+                            console.print(f"      - {f}")
+                        console.print(f"      ... and {len(files) - 2} more")
+    else:
+        console.print("\n[yellow]Frontend: ✗ Not detected[/yellow]")
     
-    if analysis['frontend']['components']:
-        console.print("\n  [dim]Components found:[/dim]")
-        for component in analysis['frontend']['components'][:5]:
-            console.print(f"    • {component}")
-        if len(analysis['frontend']['components']) > 5:
-            console.print(f"    ... and {len(analysis['frontend']['components']) - 5} more")
+    # Insights
+    insights = analysis.get('insights', [])
+    if insights:
+        console.print("\n[bold yellow]💡 Insights & Recommendations[/bold yellow]")
+        
+        # Group by level
+        success_insights = [i for i in insights if i.get('level') == 'success']
+        info_insights = [i for i in insights if i.get('level') == 'info']
+        warning_insights = [i for i in insights if i.get('level') == 'warning']
+        
+        if success_insights:
+            console.print("\n[green]✓ Good Practices:[/green]")
+            for insight in success_insights:
+                console.print(f"  • {insight['message']}")
+        
+        if info_insights:
+            console.print("\n[cyan]ℹ Information:[/cyan]")
+            for insight in info_insights:
+                console.print(f"  • {insight['message']}")
+        
+        if warning_insights:
+            console.print("\n[yellow]⚠ Recommendations:[/yellow]")
+            for insight in warning_insights:
+                console.print(f"  • {insight['message']}")
     
     # Environment files
-    if analysis.get('env_files'):
-        console.print("\n[yellow]Environment:[/yellow]")
-        console.print(f"  • Config files: {', '.join(analysis['env_files'])}")
+    env_files = analysis.get('env_files', [])
+    if env_files:
+        console.print("\n[yellow]Configuration Files:[/yellow]")
+        for env_file in env_files:
+            console.print(f"  ✓ {env_file}")
     
     # Package.json status
-    console.print("\n[yellow]Configuration:[/yellow]")
-    console.print(f"  • package.json: {'✓ Found' if analysis['has_package_json'] else '✗ Missing'}")
+    console.print("\n[yellow]Package Management:[/yellow]")
+    has_package = analysis.get('has_package_json', False)
+    has_requirements = analysis.get('has_requirements_txt', False)
+    
+    if has_package:
+        console.print(f"  ✓ package.json found")
+    if has_requirements:
+        console.print(f"  ✓ requirements.txt found")
+    if not has_package and not has_requirements:
+        console.print(f"  ✗ No package management files found")
     
     console.print("\n[green]✓ Analysis complete![/green]")
 
-
+    
 @cli.command()
 @click.argument('feature', required=True)
 @click.option('--project', '-p', type=click.Path(exists=True), help='Project path (optional if initialized)')

@@ -34,7 +34,7 @@
     "anime-portfolio": {
       "path": "D:\\PROJECTS\\anime-portfolio",
       "created_at": "2025-12-21T01:01:46.556870",
-      "last_accessed": "2025-12-21T01:05:35.537960",
+      "last_accessed": "2025-12-21T12:47:23.456587",
       "features_added": []
     },
     "Fitness-AI": {
@@ -56,6 +56,6 @@
       "features_added": []
     }
   },
-  "current": "testproject",
-  "last_updated": "2025-12-21T01:08:17.436025"
+  "current": "anime-portfolio",
+  "last_updated": "2025-12-21T12:47:23.456597"
 }

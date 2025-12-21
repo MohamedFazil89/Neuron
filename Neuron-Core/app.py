@@ -5,7 +5,7 @@ import traceback
 from agents.architect import architect_agent
 from agents.backend import backend_agent
 from agents.frontend import frontend_agent
-from agents.analyzer import analyze_project
+from agents.analyzer import analyze_project, get_analysis_summary
 from agents.backend_contextual import backend_agent_contextual
 from agents.frontend_contextual import frontend_agent_contextual
 from core.intent_detector import IntentDetector
@@ -68,11 +68,11 @@ def set_project():
             "status": "error",
             "message": str(e)
         }), 500
-
 @app.route("/analyze", methods=["GET"])
 def analyze():
     """
-    Analyze the current project structure.
+    Comprehensive project analysis with AI-powered tech stack detection.
+    Single endpoint that returns everything: structure, tech stack, and insights.
     """
     try:
         # Get project from PERSISTENT MEMORY
@@ -85,28 +85,16 @@ def analyze():
             }), 400
         
         project_path = project_info["path"]
+        
+        # Run AI-powered analysis
         analysis = analyze_project(project_path)
         
-        # Remove file contents from response (too large)
-        analysis_summary = {
-            "project_path": analysis["project_path"],
-            "backend": {
-                "exists": analysis["backend"]["exists"],
-                "files": analysis["backend"]["files"],
-                "routes": analysis["backend"]["routes"],
-                "models": analysis["backend"]["models"],
-                "controllers": analysis["backend"]["controllers"]
-            },
-            "frontend": {
-                "exists": analysis["frontend"]["exists"],
-                "files": analysis["frontend"]["files"],
-                "components": analysis["frontend"]["components"],
-                "pages": analysis["frontend"]["pages"],
-                "hooks": analysis["frontend"]["hooks"]
-            },
-            "has_package_json": analysis["package_json"] is not None,
-            "env_files": analysis["env_files"]
-        }
+        # Get clean summary (removes large file contents)
+        analysis_summary = get_analysis_summary(analysis)
+        
+        # Add insights
+        insights = generate_project_insights(analysis)
+        analysis_summary["insights"] = insights
         
         return jsonify({
             "status": "success",
@@ -117,8 +105,119 @@ def analyze():
         traceback.print_exc()
         return jsonify({
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "traceback": traceback.format_exc()
         }), 500
+
+
+def generate_project_insights(analysis):
+    """
+    Generate intelligent insights about the project.
+    """
+    insights = []
+    
+    # Check if project has both frontend and backend
+    if analysis["frontend"]["exists"] and analysis["backend"]["exists"]:
+        insights.append({
+            "type": "architecture",
+            "level": "info",
+            "message": f"Full-stack application detected: {analysis['frontend']['detected_framework']} + {analysis['backend']['detected_framework']}"
+        })
+    elif analysis["frontend"]["exists"] and not analysis["backend"]["exists"]:
+        insights.append({
+            "type": "architecture",
+            "level": "info",
+            "message": f"Frontend-only application: {analysis['frontend']['detected_framework']}"
+        })
+    elif analysis["backend"]["exists"] and not analysis["frontend"]["exists"]:
+        insights.append({
+            "type": "architecture",
+            "level": "info",
+            "message": f"Backend-only API: {analysis['backend']['detected_framework']}"
+        })
+    else:
+        insights.append({
+            "type": "architecture",
+            "level": "warning",
+            "message": "No clear frontend or backend framework detected. This might be a utility/library project."
+        })
+    
+    # Check for TypeScript
+    if 'typescript' in analysis["tech_stack"]["language"]:
+        insights.append({
+            "type": "language",
+            "level": "success",
+            "message": "TypeScript detected - type safety enabled"
+        })
+    
+    # Check for testing frameworks
+    testing_tools = analysis["tech_stack"]["testing"]
+    if testing_tools:
+        insights.append({
+            "type": "testing",
+            "level": "success",
+            "message": f"Testing configured with {', '.join(testing_tools.keys())}"
+        })
+    else:
+        insights.append({
+            "type": "testing",
+            "level": "warning",
+            "message": "No testing framework detected. Consider adding Jest, Vitest, or Pytest."
+        })
+    
+    # Check for database
+    databases = analysis["tech_stack"]["database"]
+    orms = analysis["tech_stack"]["orm"]
+    if databases or orms:
+        db_info = list(databases.keys()) + list(orms.keys())
+        insights.append({
+            "type": "database",
+            "level": "info",
+            "message": f"Database layer: {', '.join(db_info)}"
+        })
+    
+    # Check for state management (frontend)
+    state_mgmt = analysis["tech_stack"]["state_management"]
+    if state_mgmt and analysis["frontend"]["exists"]:
+        insights.append({
+            "type": "state",
+            "level": "info",
+            "message": f"State management: {', '.join(state_mgmt.keys())}"
+        })
+    
+    # Check for styling solution
+    styling = analysis["tech_stack"]["styling"]
+    if styling:
+        insights.append({
+            "type": "styling",
+            "level": "info",
+            "message": f"Styling: {', '.join(styling.keys())}"
+        })
+    
+    # Check for environment files
+    if not analysis["env_files"]:
+        insights.append({
+            "type": "config",
+            "level": "warning",
+            "message": "No .env files detected. Consider adding environment configuration."
+        })
+    
+    # Project size insights
+    total_files = len(analysis["frontend"]["files"]) + len(analysis["backend"]["files"])
+    if total_files > 500:
+        insights.append({
+            "type": "size",
+            "level": "info",
+            "message": f"Large project detected ({total_files} files). Consider modularization."
+        })
+    elif total_files < 20:
+        insights.append({
+            "type": "size",
+            "level": "info",
+            "message": "Small project - perfect for rapid development."
+        })
+    
+    return insights
 
 @app.route("/list-projects", methods=["GET"])
 def list_projects():

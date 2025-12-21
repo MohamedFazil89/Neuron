@@ -6,7 +6,7 @@ const ProjectOverviewCard = ({ projectName, absolutePath, frameworksDetected, la
     <div className="project-overview-card">
       <h2>{projectName}</h2>
       <p>{absolutePath}</p>
-      <p>Frameworks: {frameworksDetected.join(', ')}</p>
+      <p>Frameworks: {frameworksDetected}</p>
       <p>Last Analyzed: {lastAnalyzed}</p>
     </div>
   );

@@ -5,7 +5,7 @@ setup(
     version="1.0.0",
     description="AI-powered full-stack code generation CLI",
     author="Your Name",
-    author_email="your.email@example.com",
+    author_email="nmohammedfazil790@gmail.com",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
