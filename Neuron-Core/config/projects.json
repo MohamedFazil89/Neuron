@@ -56,9 +56,9 @@
       "features_added": []
     },
     "frontend": {
-      "path": "D:\\PROJECTS\\pokemon\\frontend",
+      "path": "C:\\Users\\Welcome\\OneDrive\\Desktop\\react-test\\frontend",
       "created_at": "2025-12-21T14:20:29.553812",
-      "last_accessed": "2025-12-21T18:15:40.082916",
+      "last_accessed": "2025-12-29T13:55:39.302324",
       "features_added": [
         {
           "name": "create a basic landing page for a python info",
@@ -75,6 +75,22 @@
         {
           "name": "you dumb ass",
           "added_at": "2025-12-29T13:32:30.132655"
+        },
+        {
+          "name": "build a add to cart feature and a product list with dummy datas",
+          "added_at": "2025-12-29T13:40:53.506235"
+        },
+        {
+          "name": "build a product list of cake and create a add to cart feature for that product",
+          "added_at": "2025-12-29T13:48:01.317771"
+        },
+        {
+          "name": "build a product list of cake and create a add to cart feature for that product with only frontend remove the backend codes and api calles in the frontend, use only dummy static data",
+          "added_at": "2025-12-29T13:52:25.720481"
+        },
+        {
+          "name": "create a add to cart css animaiton from this codepen code https://codepen.io/Vikarr/pen/yLmOYEr exact animation like this",
+          "added_at": "2025-12-29T13:55:06.655259"
         }
       ]
     },
@@ -91,5 +107,5 @@
     }
   },
   "current": "frontend",
-  "last_updated": "2025-12-21T18:15:40.082927"
+  "last_updated": "2025-12-29T13:55:39.302331"
 }

@@ -1,0 +1,625 @@
+/* Neuron Dashboard CSS - Place this in your src/App.css or index.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #020617;
+    color: #f1f5f9;
+    line-height: 1.5;
+    font-size: 13px;
+}
+
+.mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.neuron-dashboard {
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.neuron-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.neuron-space-y-6 > * + * {
+    margin-top: 1.5rem;
+}
+
+.neuron-space-y-3 > * + * {
+    margin-top: 0.75rem;
+}
+
+.neuron-space-y-1 > * + * {
+    margin-top: 0.25rem;
+}
+
+/* Header */
+.neuron-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.neuron-header h1 {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.03em;
+}
+
+.neuron-subtitle {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+.neuron-status-cards {
+    display: flex;
+    gap: 1rem;
+}
+
+.neuron-status-card {
+    background: #0f172a;
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #1e293b;
+}
+
+.neuron-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.neuron-pulse-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: #10b981;
+    border-radius: 50%;
+    animation: neuron-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neuron-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.neuron-status-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.neuron-status-sublabel {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+/* Usage Card */
+.neuron-usage-card {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.2), rgba(88, 28, 135, 0.2));
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.neuron-usage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.neuron-usage-stats {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.02em;
+}
+
+.neuron-usage-details {
+    color: #94a3b8;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.neuron-upgrade-btn {
+    background: #2563eb;
+    color: white;
+    padding: 0.563rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.75rem;
+    letter-spacing: -0.01em;
+}
+
+.neuron-upgrade-btn:hover {
+    background: #1d4ed8;
+}
+
+.neuron-progress-bar {
+    margin-top: 1rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+}
+
+.neuron-progress-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* Grid */
+.neuron-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+.neuron-card {
+    background: #0f172a;
+    border-radius: 0.5rem;
+    padding: 1.125rem;
+    border: 1px solid #1e293b;
+}
+
+.neuron-card-header {
+    font-size: 0.938rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.neuron-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+}
+
+/* Project Context */
+.neuron-context-label {
+    font-size: 0.625rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+}
+
+.neuron-context-value {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.neuron-context-path {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.neuron-tech-stack-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.neuron-tech-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 0.125rem;
+}
+
+.neuron-divider {
+    padding-top: 0.75rem;
+    border-top: 1px solid #1e293b;
+}
+
+.neuron-health-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.neuron-health-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #10b981;
+}
+
+.neuron-health-subtext {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+/* Action Center */
+.neuron-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.neuron-action-btn {
+    background: #1e293b;
+    color: white;
+    padding: 1.25rem 0.875rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.neuron-action-btn:hover {
+    background: #334155;
+    border-color: #3b82f6;
+}
+
+.neuron-action-title {
+    font-size: 0.938rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.neuron-action-desc {
+    font-size: 0.625rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+}
+
+.neuron-secondary-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.neuron-secondary-btn {
+    flex: 1;
+    background: #1e293b;
+    color: white;
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.375rem;
+    border: 1px solid #334155;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.neuron-secondary-btn:hover {
+    background: #334155;
+}
+
+/* Activity Timeline */
+.neuron-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.125rem;
+}
+
+.neuron-view-all {
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-size: 0.75rem;
+}
+
+.neuron-view-all:hover {
+    color: #f1f5f9;
+}
+
+.neuron-activity-item {
+    background: #1e293b;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.neuron-activity-header {
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.neuron-activity-header:hover {
+    background: rgba(51, 65, 85, 0.5);
+}
+
+.neuron-activity-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.neuron-activity-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.neuron-activity-title {
+    font-weight: 500;
+    color: white;
+    font-size: 0.813rem;
+}
+
+.neuron-activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.625rem;
+    color: #94a3b8;
+}
+
+.neuron-activity-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.neuron-activity-details {
+    border-top: 1px solid #334155;
+    padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.neuron-detail-section {
+    margin-bottom: 0.75rem;
+}
+
+.neuron-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.neuron-detail-label {
+    font-size: 0.625rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.neuron-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.neuron-tag {
+    font-size: 0.625rem;
+    background: #1e293b;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #334155;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.neuron-agent-tag {
+    background: rgba(30, 58, 138, 0.3);
+    color: #93c5fd;
+    border: 1px solid #1e3a8a;
+}
+
+.neuron-check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    margin-bottom: 0.25rem;
+}
+
+.neuron-detail-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+.neuron-detail-btn {
+    font-size: 0.625rem;
+    background: #1e293b;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.25rem;
+    border: 1px solid #334155;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #f1f5f9;
+}
+
+.neuron-detail-btn:hover {
+    background: #334155;
+}
+
+/* Collapsible Section */
+.neuron-collapsible {
+    background: #0f172a;
+    border-radius: 0.5rem;
+    border: 1px solid #1e293b;
+    overflow: hidden;
+}
+
+.neuron-collapsible-header {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.neuron-collapsible-header:hover {
+    background: #1e293b;
+}
+
+.neuron-collapsible-content {
+    border-top: 1px solid #1e293b;
+    padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.neuron-agent-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+}
+
+.neuron-agent-card {
+    background: #1e293b;
+    border-radius: 0.5rem;
+    padding: 0.625rem;
+    border: 1px solid #334155;
+}
+
+.neuron-agent-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.neuron-agent-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+}
+
+.neuron-agent-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.neuron-agent-last-run {
+    font-size: 0.625rem;
+    color: #94a3b8;
+}
+
+/* Footer */
+.neuron-footer {
+    background: #0f172a;
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+}
+
+.neuron-footer-info {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.neuron-footer-item {
+    color: #64748b;
+}
+
+.neuron-footer-value {
+    margin-left: 0.5rem;
+    color: white;
+    font-weight: 500;
+}
+
+.neuron-settings-btn {
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.neuron-settings-btn:hover {
+    color: #f1f5f9;
+}
+
+/* Color utilities */
+.neuron-text-cyan { color: #06b6d4; }
+.neuron-text-green { color: #10b981; }
+.neuron-text-orange { color: #f97316; }
+.neuron-text-emerald { color: #10b981; }
+.neuron-text-yellow { color: #eab308; }
+.neuron-text-purple { color: #a855f7; }
+.neuron-text-blue { color: #3b82f6; }
+.neuron-text-indigo { color: #6366f1; }
+
+.neuron-bg-cyan { background: #06b6d4; }
+.neuron-bg-green { background: #10b981; }
+.neuron-bg-orange { background: #f97316; }
+.neuron-bg-emerald { background: #10b981; }
+.neuron-bg-slate { background: #64748b; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .neuron-grid-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .neuron-agent-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .neuron-dashboard {
+        padding: 1rem;
+    }
+    
+    .neuron-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .neuron-status-cards {
+        width: 100%;
+    }
+    
+    .neuron-action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .neuron-agent-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
