@@ -19,11 +19,17 @@ from rich.markdown import Markdown
 # Load environment variables
 load_dotenv()
 
-console = Console()
+console = Console(force_terminal=True)
+if sys.platform == "win32":
+    # Force UTF-8 for Windows console to avoid charmap errors with Rich
+    sys.stdout.reconfigure(encoding='utf-8')
+    console = Console(force_terminal=True, legacy_windows=False)
 
 # Configuration
 NEURON_API_URL = os.getenv("NEURON_API_URL", "http://localhost:8000")
-CONFIG_FILE = Path.home() / ".neuron" / "config.json"
+CONFIG_DIR = Path.home() / ".neuron"
+CONFIG_FILE = CONFIG_DIR / "config.json"
+CURRENT_PROJECT_FILE = CONFIG_DIR / "current_project.json"
 
 
 class NeuronConfig:
@@ -55,12 +61,31 @@ class NeuronConfig:
     @staticmethod
     def get_current_project():
         """Get current project from config"""
+        if CURRENT_PROJECT_FILE.exists():
+            with open(CURRENT_PROJECT_FILE, 'r') as f:
+                data = json.load(f)
+                return data.get("path")
+        
+        # Fallback to old config if current_project.json doesn't exist
         config = NeuronConfig.load_config()
         return config.get("current_project")
     
     @staticmethod
     def set_current_project(project_path):
         """Set current project in config"""
+        # Save to the new format used by backend
+        project_name = Path(project_path).name
+        project_info = {
+            "id": project_name,
+            "name": project_name,
+            "path": str(project_path)
+        }
+        
+        NeuronConfig.ensure_config_dir()
+        with open(CURRENT_PROJECT_FILE, 'w') as f:
+            json.dump(project_info, f, indent=2)
+            
+        # Also keep old format for compatibility
         config = NeuronConfig.load_config()
         config["current_project"] = str(project_path)
         NeuronConfig.save_config(config)
@@ -105,7 +130,7 @@ def make_api_request(endpoint, method="GET", data=None):
 @click.version_option(version="1.0.0")
 def cli():
     """
-    🧠 Neuron - AI-powered full-stack code generation
+    Neuron - AI-powered full-stack code generation
     
     Build features with AI assistance for your React + Express projects.
     """
@@ -124,7 +149,7 @@ def init(project_path):
     
     console.print(Panel.fit(
         f"[cyan]Initializing Neuron for project:[/cyan]\n[white]{project_path}[/white]",
-        title="🧠 Neuron Init"
+        title="Neuron Init"
     ))
     
     with Progress(
@@ -146,7 +171,7 @@ def init(project_path):
         
         progress.update(task, completed=True)
     
-    console.print(f"\n[green]✓ Project initialized successfully![/green]")
+    console.print(f"\n[green]v Project initialized successfully![/green]")
     console.print(f"[dim]Project: {response['project_name']}[/dim]")
     console.print(f"[dim]Path: {response['project_path']}[/dim]")
     
@@ -155,7 +180,7 @@ def init(project_path):
     console.print(f"\n[cyan]Project Summary:[/cyan]")
     console.print(f"  • Backend files: {analysis.get('backend_files', 0)}")
     console.print(f"  • Frontend files: {analysis.get('frontend_files', 0)}")
-    console.print(f"  • Has package.json: {'✓' if analysis.get('has_package_json') else '✗'}")
+    console.print(f"  * Has package.json: {'v' if analysis.get('has_package_json') else 'x'}")
 
 @cli.command()
 @click.argument('project_path', type=click.Path(exists=True), required=False)
@@ -184,7 +209,7 @@ def analyze(project_path):
     
     console.print(Panel.fit(
         f"[cyan]Analyzing project:[/cyan]\n[white]{project_path}[/white]",
-        title="🔍 Project Analysis"
+        title="Project Analysis"
     ))
     
     with Progress(
@@ -368,7 +393,7 @@ def analyze(project_path):
     if not has_package and not has_requirements:
         console.print(f"  ✗ No package management files found")
     
-    console.print("\n[green]✓ Analysis complete![/green]")
+    console.print("\n[green]v Analysis complete![/green]")
     
 @cli.command()
 @click.argument('project_name', required=True)
@@ -407,7 +432,7 @@ def build(project_name, frontend, backend, path):
         f"[dim]Frontend: {frontend}[/dim]\n"
         f"[dim]Backend: {backend}[/dim]\n"
         f"[dim]Path: {project_dir}[/dim]",
-        title="🏗️ Project Builder"
+        title="Project Builder"
     ))
     
     with Progress(
@@ -415,24 +440,25 @@ def build(project_name, frontend, backend, path):
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        task = progress.add_task("[cyan]Scaffolding project...", total=None)
+        task = progress.add_task("[cyan]Scaffolding project via backend...", total=None)
         
-        # Create project directory
-        project_dir.mkdir(parents=True)
+        # Call backend scaffold endpoint
+        response = make_api_request(
+            "/scaffold",
+            method="POST",
+            data={
+                "project_name": project_name,
+                "frontend": frontend,
+                "backend": backend,
+                "path": str(Path(path).resolve()) if path else None
+            }
+        )
         
-        # Scaffold frontend
-        if frontend != 'none':
-            _scaffold_frontend(project_dir, frontend, progress)
-        
-        # Scaffold backend
-        if backend != 'none':
-            _scaffold_backend(project_dir, backend, progress)
-        
-        # Create .gitignore
-        _create_gitignore(project_dir)
-        
-        # Create README
-        _create_readme(project_dir, project_name, frontend, backend)
+        if response.get('status') != 'success':
+            console.print(f"[red]❌ Scaffolding failed: {response.get('message', 'Unknown error')}[/red]")
+            sys.exit(1)
+            
+        project_dir = Path(response['project_path'])
         
         progress.update(task, completed=True)
     
@@ -502,7 +528,7 @@ def add_feature(feature, project):
     
     console.print(Panel.fit(
         f"[cyan]Adding feature:[/cyan]\n[white]{feature}[/white]\n\n[dim]Project: {project_path}[/dim]",
-        title="✨ Feature Generator"
+        title="Feature Generator"
     ))
     
     with Progress(
@@ -546,13 +572,13 @@ def add_feature(feature, project):
         if backend_files:
             console.print("\n[yellow]Backend:[/yellow]")
             for file_info in backend_files:
-                action_icon = "✨" if file_info['action'] == 'create' else "🔄"
+                action_icon = "+" if file_info['action'] == 'create' else "*"
                 console.print(f"  {action_icon} {file_info['path']}")
         
         if frontend_files:
             console.print("\n[yellow]Frontend:[/yellow]")
             for file_info in frontend_files:
-                action_icon = "✨" if file_info['action'] == 'create' else "🔄"
+                action_icon = "+" if file_info['action'] == 'create' else "*"
                 console.print(f"  {action_icon} {file_info['path']}")
         
         console.print(f"\n[dim]Total: {len(saved_files)} files[/dim]")
@@ -563,283 +589,6 @@ def add_feature(feature, project):
     console.print("  3. Test the new feature")
 
 
-# Helper functions for scaffolding
-
-def _scaffold_frontend(project_dir, framework, progress):
-    """Scaffold frontend boilerplate"""
-    frontend_dir = project_dir / "frontend"
-    frontend_dir.mkdir()
-    
-    if framework == 'react':
-        # Create React with Vite boilerplate
-        (frontend_dir / "src").mkdir()
-        (frontend_dir / "public").mkdir()
-        
-        # package.json
-        package_json = {
-            "name": "frontend",
-            "private": True,
-            "version": "0.0.0",
-            "type": "module",
-            "scripts": {
-                "dev": "vite",
-                "build": "vite build",
-                "preview": "vite preview"
-            },
-            "dependencies": {
-                "react": "^18.2.0",
-                "react-dom": "^18.2.0"
-            },
-            "devDependencies": {
-                "@types/react": "^18.2.43",
-                "@types/react-dom": "^18.2.17",
-                "@vitejs/plugin-react": "^4.2.1",
-                "vite": "^5.0.8"
-            }
-        }
-        with open(frontend_dir / "package.json", 'w') as f:
-            json.dump(package_json, f, indent=2)
-        
-        # vite.config.js
-        vite_config = """import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-})
-"""
-        (frontend_dir / "vite.config.js").write_text(vite_config)
-        
-        # src/App.jsx
-        app_jsx = """function App() {
-  return (
-    <div className="App">
-      <h1>Welcome to your new React app!</h1>
-      <p>Start building your features with Neuron.</p>
-    </div>
-  )
-}
-
-export default App
-"""
-        (frontend_dir / "src" / "App.jsx").write_text(app_jsx)
-        
-        # src/main.jsx
-        main_jsx = """import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-"""
-        (frontend_dir / "src" / "main.jsx").write_text(main_jsx)
-        
-        # index.html
-        index_html = """<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Neuron App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
-"""
-        (frontend_dir / "index.html").write_text(index_html)
-        
-        # src/index.css
-        (frontend_dir / "src" / "index.css").write_text("/* Add your styles here */\n")
-
-def _scaffold_backend(project_dir, framework, progress):
-    """Scaffold backend boilerplate"""
-    backend_dir = project_dir / "backend"
-    backend_dir.mkdir()
-    
-    if framework == 'nodejs':
-        # Create Express boilerplate
-        (backend_dir / "routes").mkdir()
-        (backend_dir / "models").mkdir()
-        (backend_dir / "controllers").mkdir()
-        
-        # package.json
-        package_json = {
-            "name": "backend",
-            "version": "1.0.0",
-            "main": "server.js",
-            "scripts": {
-                "start": "node server.js",
-                "dev": "nodemon server.js"
-            },
-            "dependencies": {
-                "express": "^4.18.2",
-                "cors": "^2.8.5",
-                "dotenv": "^16.3.1"
-            },
-            "devDependencies": {
-                "nodemon": "^3.0.2"
-            }
-        }
-        with open(backend_dir / "package.json", 'w') as f:
-            json.dump(package_json, f, indent=2)
-        
-        # server.js
-        server_js = """const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-"""
-        (backend_dir / "server.js").write_text(server_js)
-        
-        # .env
-        (backend_dir / ".env").write_text("PORT=5000\n")
-    
-    elif framework == 'python':
-        # Create Flask boilerplate
-        (backend_dir / "routes").mkdir()
-        (backend_dir / "models").mkdir()
-        
-        # requirements.txt
-        requirements = """flask==3.0.0
-flask-cors==4.0.0
-python-dotenv==1.0.0
-"""
-        (backend_dir / "requirements.txt").write_text(requirements)
-        
-        # app.py
-        app_py = """from flask import Flask, jsonify
-from flask_cors import CORS
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-app = Flask(__name__)
-CORS(app)
-
-@app.route('/api/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok', 'message': 'Server is running'})
-
-if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    app.run(debug=True, port=port)
-"""
-        (backend_dir / "app.py").write_text(app_py)
-        
-        # .env
-        (backend_dir / ".env").write_text("PORT=5000\n")
-
-def _create_gitignore(project_dir):
-    """Create .gitignore file"""
-    gitignore = """# Dependencies
-node_modules/
-__pycache__/
-*.pyc
-
-# Environment
-.env
-.env.local
-
-# Build
-dist/
-build/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-"""
-    (project_dir / ".gitignore").write_text(gitignore)
-
-def _create_readme(project_dir, project_name, frontend, backend):
-    """Create README.md"""
-    readme = f"""# {project_name}
-
-Generated with Neuron AI
-
-## Tech Stack
-
-"""
-    if frontend != 'none':
-        readme += f"- **Frontend**: {frontend.capitalize()}\n"
-    if backend != 'none':
-        readme += f"- **Backend**: {backend.capitalize()}\n"
-    
-    readme += """
-## Getting Started
-
-"""
-    
-    if frontend != 'none':
-        readme += """### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-"""
-    
-    if backend != 'none':
-        if backend == 'nodejs':
-            readme += """### Backend
-
-```bash
-cd backend
-npm install
-npm start
-```
-
-"""
-        else:
-            readme += """### Backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-python app.py
-```
-
-"""
-    
-    readme += """## Adding Features
-
-Use Neuron to add features:
-
-```bash
-neuron add-feature "Your feature description"
-```
-"""
-    
     (project_dir / "README.md").write_text(readme)
 @cli.command()
 @click.argument('project_path', type=click.Path(exists=True), required=False)
@@ -988,7 +737,7 @@ def status():
         health = make_api_request("/health")
         console.print(f"  [green]✓ Connected to {NEURON_API_URL}[/green]")
     except:
-        console.print(f"  [red]✗ Cannot connect to {NEURON_API_URL}[/red]")
+        console.print(f"  [red]x Cannot connect to {NEURON_API_URL}[/red]")
         console.print(f"  [dim]Make sure Flask backend is running[/dim]")
 
 
@@ -996,12 +745,12 @@ def status():
 def projects():
     """List all projects"""
     console.print("\n[bold cyan]Neuron Projects[/bold cyan]")
-    console.print("─" * 50)
+    console.print("-" * 50)
     
     try:
         response = make_api_request("/list-projects")
-        all_projects = response['data']['projects']
-        current = response['data']['current']
+        all_projects = response.get('data', [])
+        current = response.get('current')
         
         if not all_projects:
             console.print("\n[yellow]No projects found[/yellow]")
@@ -1014,15 +763,32 @@ def projects():
         table.add_column("Features", justify="right")
         table.add_column("Last Accessed", style="dim")
         
-        for name, data in all_projects.items():
-            is_current = "→ " if name == current else "  "
-            features_count = len(data.get('features_added', []))
-            table.add_row(
-                f"{is_current}{name}",
-                data['path'],
-                str(features_count),
-                data.get('last_accessed', 'Unknown')[:10]
-            )
+        if isinstance(all_projects, list):
+            # Backend returns a list of project dicts
+            for item in all_projects:
+                name = item.get('name')
+                path = item.get('path')
+                features_count = item.get('features_count', 0)
+                last_accessed = item.get('last_accessed', 'Unknown')
+                
+                is_current = "> " if name == current else "  "
+                table.add_row(
+                    f"{is_current}{name}",
+                    path,
+                    str(features_count),
+                    last_accessed[:10] if last_accessed else "Unknown"
+                )
+        else:
+            # Fallback if it's a dict
+            for name, data in all_projects.items():
+                is_current = "> " if name == current else "  "
+                features_count = len(data.get('features_added', []))
+                table.add_row(
+                    f"{is_current}{name}",
+                    data['path'],
+                    str(features_count),
+                    data.get('last_accessed', 'Unknown')[:10]
+                )
         
         console.print("\n")
         console.print(table)

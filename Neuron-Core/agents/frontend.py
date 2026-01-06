@@ -127,7 +127,7 @@ Feature to implement: {feature}
                     f"File {file['path']} has empty or invalid content"
                 )
 
-        print(f"[FRONTEND] ✓ Validation passed - Generated {len(result['files'])} files")
+        print(f"[FRONTEND] Validation passed - Generated {len(result['files'])} files")
         for file in result['files']:
             print(f"  - {file['path']}")
         

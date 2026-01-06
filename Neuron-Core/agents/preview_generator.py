@@ -256,7 +256,7 @@ class PreviewGenerator:
         output.append("=" * 70)
         
         # Summary
-        output.append(f"\n📊 Summary:")
+        output.append(f"\n[SUMMARY] Summary:")
         output.append(f"  Total files: {summary['total_files']}")
         output.append(f"  New files: {summary['new_files']}")
         output.append(f"  Modified files: {summary['modified_files']}")
@@ -265,17 +265,17 @@ class PreviewGenerator:
         
         # Risk assessment
         risk_colors = {
-            'low': '🟢',
-            'medium': '🟡',
-            'high': '🟠',
-            'critical': '🔴'
+            'low': '[LOW]',
+            'medium': '[MED]',
+            'high': '[HIGH]',
+            'critical': '[CRIT]'
         }
         
-        risk_icon = risk_colors.get(summary['overall_risk'], '⚪')
+        risk_icon = risk_colors.get(summary['overall_risk'], '[?]')
         output.append(f"\n{risk_icon} Overall Risk: {summary['overall_risk'].upper()}")
         
         if summary['high_risk_files']:
-            output.append(f"\n⚠️  High-risk files:")
+            output.append(f"\n[WARN] High-risk files:")
             for file_path in summary['high_risk_files']:
                 output.append(f"    - {file_path}")
         
@@ -289,8 +289,8 @@ class PreviewGenerator:
             path = change['path']
             diff_result = change['diff_result']
             
-            action_icon = "✨" if action == "create" else "🔄"
-            risk_icon = risk_colors.get(diff_result['risk_level'], '⚪')
+            action_icon = "[NEW]" if action == "create" else "[MOD]"
+            risk_icon = risk_colors.get(diff_result['risk_level'], '[?]')
             
             output.append(f"\n{action_icon} {action.upper()}: {path}")
             output.append(f"   {risk_icon} Risk: {diff_result['risk_level']}")

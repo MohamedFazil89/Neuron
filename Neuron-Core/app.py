@@ -21,6 +21,7 @@ from core.intent_detector import IntentDetector
 from core.project_analyzer import ProjectAnalyzer
 from core.project_manager import ProjectManager
 from core.input_validator import InputValidator
+from core.scaffolder import Scaffolder
 
 # Load environment variables
 load_dotenv()
@@ -75,7 +76,7 @@ def set_project():
         # Analyze the project
         analysis = analyze_project(project_path)
         
-        print(f"\n[SET-PROJECT] ✓ Project set: {project_info['name']}")
+        print(f"\n[SET-PROJECT] Current Project set: {project_info['name']}")
         print(f"[SET-PROJECT] Path: {project_path}\n")
         
         return jsonify({
@@ -89,6 +90,70 @@ def set_project():
     
     except Exception as e:
         print(f"\n[ERROR] Set project failed: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/scaffold", methods=["POST"])
+def scaffold_project():
+    """
+    Scaffold a new project
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or "project_name" not in data:
+            return jsonify({
+                "status": "error",
+                "message": "Missing 'project_name' in request body"
+            }), 400
+        
+        project_name = data["project_name"]
+        frontend = data.get("frontend", "none")
+        backend = data.get("backend", "none")
+        path = data.get("path")
+        
+        # Determine project directory
+        if path:
+            project_dir = Path(path) / project_name
+        else:
+            project_dir = Path.cwd().parent / project_name # Default to sibling of Neuron-Core
+            
+        # Check if directory already exists
+        if project_dir.exists():
+            return jsonify({
+                "status": "error",
+                "message": f"Directory '{project_dir}' already exists"
+            }), 400
+            
+        # Create project directory
+        project_dir.mkdir(parents=True)
+        
+        # Scaffold frontend
+        if frontend != 'none':
+            Scaffolder.scaffold_frontend(project_dir, frontend)
+            
+        # Scaffold backend
+        if backend != 'none':
+            Scaffolder.scaffold_backend(project_dir, backend)
+            
+        # Create .gitignore
+        Scaffolder.create_gitignore(project_dir)
+        
+        # Create README
+        Scaffolder.create_readme(project_dir, project_name, frontend, backend)
+        
+        # Auto-set as current project
+        project_info = ProjectManager.set_current_project(str(project_dir))
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Project '{project_name}' scaffolded successfully",
+            "project_path": str(project_dir.resolve()),
+            "project_name": project_name
+        }), 201
+        
+    except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -271,34 +336,36 @@ def build_and_save():
         print(f"{'='*60}\n")
         
         # Validate input
-        validation = InputValidator.validate_feature_request(feature_description)
+        validation = InputValidator.validate(feature_description)
         if not validation["valid"]:
             return jsonify({
                 "status": "error",
-                "message": validation["message"]
+                "message": validation["blocked_reason"]
             }), 400
         
         # Detect intent
-        intent = IntentDetector.detect(feature_description)
-        print(f"\n[INTENT] Detected: {intent['type']}")
-        print(f"[INTENT] Confidence: {intent['confidence']}\n")
+        intent_info = IntentDetector.explain(feature_description)
+        intent_type = intent_info["intent"]
+        
+        print(f"\n[INTENT] Detected: {intent_type}")
+        print(f"[INTENT] Confidence: {intent_info['confidence']}\n")
         
         # Route based on intent
-        if intent["type"] == "VERIFICATION":
-            # Handle verification request
-            verifier = IntegrationVerifier(project_path)
-            issues = verifier.analyze()
+        if intent_type == "ANALYSIS":
+            # Handle verification/analysis request
+            analysis_result = ProjectAnalyzer.verify_project(project_path)
             
+            if analysis_result["status"] == "error":
+                return jsonify(analysis_result), 400
+                
             return jsonify({
                 "status": "success",
-                "request_type": "VERIFICATION",
+                "request_type": "ANALYSIS",
                 "analysis": {
-                    "issues": issues,
-                    "summary": {
-                        "issues_found": len(issues),
-                        "severity": _get_max_severity(issues)
-                    },
-                    "recommendations": _get_recommendations(issues)
+                    "issues": analysis_result.get("issues", []),
+                    "summary": analysis_result.get("summary", {}),
+                    "recommendations": analysis_result.get("recommendations", []),
+                    "tech_stack": analysis_result.get("analysis", {}).get("tech_stack", {})
                 }
             }), 200
         
@@ -457,7 +524,7 @@ if __name__ == "__main__":
     debug = os.getenv("DEBUG", "True").lower() == "true"
     
     print(f"\n{'='*60}")
-    print(f"🧠 Neuron Backend Starting")
+    print(f"Neuron Backend Starting")
     print(f"{'='*60}")
     print(f"Port: {port}")
     print(f"Debug: {debug}")

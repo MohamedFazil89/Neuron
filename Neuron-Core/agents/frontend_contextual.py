@@ -114,7 +114,7 @@ Generate the complete implementation as a JSON response matching the schema in t
         if "path" not in file or "content" not in file or "action" not in file:
             raise ValueError(f"File missing required fields")
     
-    print(f"[FRONTEND-CONTEXT] ✓ Generated {len(result['files'])} files")
+    print(f"[FRONTEND-CONTEXT] Generated {len(result['files'])} files")
     for file in result['files']:
         print(f"  {file['action'].upper()}: {file['path']}")
     

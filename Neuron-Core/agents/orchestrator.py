@@ -141,7 +141,7 @@ Return ONLY the JSON execution plan.
     
     execution_plan = result["execution_plan"]
     
-    print(f"[ORCHESTRATOR] ✓ Execution plan created")
+    print(f"[ORCHESTRATOR] Execution plan created successfully")
     print(f"  Agents to run: {len(execution_plan)}")
     for step in execution_plan:
         print(f"    {step['order']}. {step['agent'].upper()} - {step['reason']}")

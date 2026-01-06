@@ -358,7 +358,7 @@ class IntegrationVerifier:
                     
                     # CRITICAL CHECK: Never add self-imports
                     if target_path.resolve() == source_path.resolve():
-                        print(f"[INTEGRATION-FIX] ⚠ Skipping self-import: {fix['component']}")
+                        print(f"[INTEGRATION-FIX] [WARN] Skipping self-import: {fix['component']}")
                         continue
                     
                     print(f"[INTEGRATION-FIX] Adding import to: {target_path}")
@@ -381,10 +381,10 @@ class IntegrationVerifier:
                     )
                     fixed.append(fix)
                 
-                print(f"[INTEGRATION-FIX] ✓ Fix {i} completed")
+                print(f"[INTEGRATION-FIX] [OK] Fix {i} completed")
                 
             except Exception as e:
-                print(f"[INTEGRATION-FIX] ✗ Fix {i} FAILED: {e}")
+                print(f"[INTEGRATION-FIX] [FAIL] Fix {i} FAILED: {e}")
                 import traceback
                 traceback.print_exc()
                 failed.append({
@@ -460,18 +460,18 @@ class IntegrationVerifier:
                 
                 if should_remove:
                     removed_count += 1
-                    print(f"[INTEGRATION-FIX] 🗑 Removing: {line.strip()}")
+                    print(f"[INTEGRATION-FIX] [REMOVE] Removing: {line.strip()}")
                 else:
                     filtered_lines.append(line)
             
             if removed_count > 0:
                 target_file.write_text('\n'.join(filtered_lines), encoding='utf-8')
-                print(f"[INTEGRATION-FIX] ✓ Removed {removed_count} invalid import(s) from {target_file.name}")
+                print(f"[INTEGRATION-FIX] [OK] Removed {removed_count} invalid import(s) from {target_file.name}")
             else:
-                print(f"[INTEGRATION-FIX] ⚠ No matching import found to remove")
+                print(f"[INTEGRATION-FIX] [WARN] No matching import found to remove")
                 
         except Exception as e:
-            print(f"[INTEGRATION-FIX] ✗ Error removing import: {e}")
+            print(f"[INTEGRATION-FIX] [ERR] Error removing import: {e}")
             import traceback
             traceback.print_exc()
     
@@ -498,14 +498,14 @@ class IntegrationVerifier:
             source_path = project_root / source
             
             if not source_path.exists():
-                print(f"[INTEGRATION-FIX] ⚠ Source file not found: {source_path}")
+                print(f"[INTEGRATION-FIX] [WARN] Source file not found: {source_path}")
                 return
             
             # Calculate relative path from target to source
             try:
                 relative_path = os.path.relpath(source_path, target_file.parent).replace("\\", "/")
             except ValueError:
-                print(f"[INTEGRATION-FIX] ⚠ Cannot calculate relative path")
+                print(f"[INTEGRATION-FIX] [WARN] Cannot calculate relative path")
                 return
             
             # Ensure path starts with ./
@@ -532,11 +532,11 @@ class IntegrationVerifier:
             # Write back
             new_content = '\n'.join(lines)
             target_file.write_text(new_content, encoding='utf-8')
-            print(f"[INTEGRATION-FIX] ✓ Added import for {component} in {target_file.name}")
+            print(f"[INTEGRATION-FIX] [OK] Added import for {component} in {target_file.name}")
             print(f"[INTEGRATION-FIX]   Import: {import_line}")
             
         except Exception as e:
-            print(f"[INTEGRATION-FIX] ✗ Error adding import: {e}")
+            print(f"[INTEGRATION-FIX] [ERR] Error adding import: {e}")
             import traceback
             traceback.print_exc()
     
@@ -567,7 +567,7 @@ class IntegrationVerifier:
             
             if not (has_function and has_return and has_jsx):
                 # App.jsx is incomplete - need to create a proper structure
-                print(f"[INTEGRATION-FIX] ⚠ App.jsx appears incomplete - creating basic structure")
+                print(f"[INTEGRATION-FIX] [WARN] App.jsx appears incomplete - creating basic structure")
                 
                 # Find where imports end
                 last_import_line = 0
@@ -598,7 +598,7 @@ class IntegrationVerifier:
                 
                 new_content = '\n'.join(new_app_content)
                 target_file.write_text(new_content, encoding='utf-8')
-                print(f"[INTEGRATION-FIX] ✓ Created App component with {component}")
+                print(f"[INTEGRATION-FIX] [OK] Created App component with {component}")
                 return
             
             # SECOND: App.jsx has structure - find insertion point
@@ -675,13 +675,13 @@ class IntegrationVerifier:
             if modified:
                 new_content = '\n'.join(lines)
                 target_file.write_text(new_content, encoding='utf-8')
-                print(f"[INTEGRATION-FIX] ✓ Added usage of {component} in {target_file.name}")
+                print(f"[INTEGRATION-FIX] [OK] Added usage of {component} in {target_file.name}")
             else:
-                print(f"[INTEGRATION-FIX] ⚠ Could not find suitable insertion point for {component}")
+                print(f"[INTEGRATION-FIX] [WARN] Could not find suitable insertion point for {component}")
                 print(f"[INTEGRATION-FIX] ℹ File content preview:")
                 print('\n'.join(lines[:20]))  # Show first 20 lines for debugging
                 
         except Exception as e:
-            print(f"[INTEGRATION-FIX] ✗ Error adding component usage: {e}")
+            print(f"[INTEGRATION-FIX] [ERR] Error adding component usage: {e}")
             import traceback
             traceback.print_exc()

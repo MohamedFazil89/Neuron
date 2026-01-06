@@ -58,7 +58,7 @@ class ProjectAnalyzer:
             "frontend_framework": analysis["frontend"]["detected_framework"]
         }
         
-        print(f"[PROJECT_ANALYZER] ✓ Analysis complete")
+        print(f"[PROJECT_ANALYZER] Analysis complete")
         print(f"  Backend files: {summary['total_backend_files']}")
         print(f"  Frontend files: {summary['total_frontend_files']}")
         print(f"  Issues: {summary['issues_found']}")

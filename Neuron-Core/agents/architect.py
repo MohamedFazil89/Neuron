@@ -131,7 +131,7 @@ Return the JSON contract exactly as specified in the system prompt.
             if api_missing:
                 raise ValueError(f"API contract incomplete: {api_missing}")
         
-        print(f"[ARCHITECT] ✓ Contract locked")
+        print(f"[ARCHITECT] Contract locked successfully")
         print(f"  Domain: {result['domain']}")
         print(f"  Requires API: {result['requires_api']}")
         if result.get("api"):

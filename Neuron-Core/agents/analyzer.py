@@ -314,7 +314,7 @@ def analyze_project(project_path):
     if not os.path.exists(project_path):
         raise Exception(f"Project path does not exist: {project_path}")
     
-    print(f"[AI ANALYZER] 🔍 Scanning project: {project_path}")
+    print(f"[AI ANALYZER] Scanning project: {project_path}")
     
     project_root = Path(project_path)
     
@@ -373,7 +373,7 @@ def analyze_project(project_path):
             pass
     
     # Detect technologies
-    print("[AI ANALYZER] 🤖 Detecting tech stack...")
+    print("[AI ANALYZER] Detecting tech stack...")
     
     detected_from_package = detect_tech_from_package_json(analysis["package_json"])
     detected_from_files = detect_tech_from_files(project_root)
@@ -408,7 +408,7 @@ def analyze_project(project_path):
         analysis["backend"]["exists"] = True
     
     # Analyze project structure dynamically
-    print("[AI ANALYZER] 📂 Analyzing project structure...")
+    print("[AI ANALYZER] Analyzing project structure...")
     structure = analyze_project_structure(project_root)
     
     # Populate backend/frontend/shared structures
@@ -419,7 +419,7 @@ def analyze_project(project_path):
                 analysis[domain]["files"].extend(files)
     
     # Read file contents (sample for context)
-    print("[AI ANALYZER] 📖 Reading file contents...")
+    print("[AI ANALYZER] Reading file contents...")
     for domain in ['frontend', 'backend', 'shared']:
         for file_path in analysis[domain]["files"][:50]:  # Limit to first 50 files
             full_path = project_root / file_path
@@ -439,9 +439,9 @@ def analyze_project(project_path):
             analysis["env_files"].append(env_file)
     
     # Summary
-    print(f"\n[AI ANALYZER] ✅ Analysis Complete!")
-    print(f"  Frontend: {'✓ ' + analysis['frontend']['detected_framework'] if analysis['frontend']['exists'] else '✗ Not detected'}")
-    print(f"  Backend: {'✓ ' + analysis['backend']['detected_framework'] if analysis['backend']['exists'] else '✗ Not detected'}")
+    print(f"\n[AI ANALYZER] Analysis Complete!")
+    print(f"  Frontend: {'[OK] ' + analysis['frontend']['detected_framework'] if analysis['frontend']['exists'] else '[NONE] Not detected'}")
+    print(f"  Backend: {'[OK] ' + analysis['backend']['detected_framework'] if analysis['backend']['exists'] else '[NONE] Not detected'}")
     print(f"  Files: {len(analysis['frontend']['files'])} frontend, {len(analysis['backend']['files'])} backend")
     print(f"  Tech Stack: {len([t for cat in analysis['tech_stack'].values() for t in cat])} technologies detected")
     

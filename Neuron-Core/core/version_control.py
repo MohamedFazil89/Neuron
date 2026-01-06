@@ -128,7 +128,7 @@ class VersionControl:
         
         VersionControl._save_metadata(project_path, metadata)
         
-        print(f"[VERSION_CONTROL] ✓ Snapshot created: {snapshot_id}")
+        print(f"[VERSION_CONTROL] Snapshot created: {snapshot_id}")
         
         return snapshot_info
     
@@ -277,9 +277,9 @@ class VersionControl:
             result = VersionControl._rollback_zip(project_path, snapshot_id, snapshot["files_changed"])
         
         if result["status"] == "success":
-            print(f"[VERSION_CONTROL] ✓ Rollback successful")
+            print(f"[VERSION_CONTROL] Rollback successful")
         else:
-            print(f"[VERSION_CONTROL] ✗ Rollback failed: {result['message']}")
+            print(f"[VERSION_CONTROL] Rollback failed: {result['message']}")
         
         return result
     
